@@ -16,43 +16,72 @@ namespace propmgr.Core.xUnit.Tests.Commands
             Assert.Throws<ArgumentNullException>(() => { ICommand cmd = new AddPropertyCommand(null, prop); });
         }
 
-        [Fact]
-        public void NullProperty_ShouldNotEditEmptyCollection()
+        public class EmptyPropertyList
         {
-            var props = new List<PropertyPair>();
-            ICommand cmd = new AddPropertyCommand(props, null);
+            private readonly List<PropertyPair> _properties;
 
-            cmd.Execute();
-
-            Assert.Empty(props);
-        }
-
-        [Fact]
-        public void NullProperty_ShouldNotEditFilledCollection()
-        {
-            var props = new List<PropertyPair>
+            public EmptyPropertyList()
             {
-                new PropertyPair { Key = "A", Value = "a" },
-                new PropertyPair { Key = "B", Value = "b" }
-            };
-            ICommand cmd = new AddPropertyCommand(props, null);
+                _properties = new List<PropertyPair>();
+            }
 
-            cmd.Execute();
+            [Fact]
+            public void NullProperty_ShouldNotEditEmptyCollection()
+            {
+                ICommand cmd = new AddPropertyCommand(_properties, null);
 
-            Assert.Equal(2, props.Count);
+                cmd.Execute();
+
+                Assert.Empty(_properties);
+            }
+
+            [Fact]
+            public void ShouldAddIntoEmptyCollection()
+            {
+                var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
+                ICommand cmd = new AddPropertyCommand(_properties, prop);
+
+                cmd.Execute();
+
+                Assert.Single(_properties);
+                Assert.Same(prop, _properties.First());
+            }
         }
 
-        [Fact]
-        public void ShouldAddIntoEmptyCollection()
+        public class PropertyListWithTwoElements
         {
-            var props = new List<PropertyPair>();
-            var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
-            ICommand cmd = new AddPropertyCommand(props, prop);
+            private readonly List<PropertyPair> _properties;
 
-            cmd.Execute();
+            public PropertyListWithTwoElements()
+            {
+                _properties = new List<PropertyPair>
+                {
+                    new PropertyPair { Key = "A", Value = "a" },
+                    new PropertyPair { Key = "B", Value = "b" }
+                };
+            }
 
-            Assert.Single(props);
-            Assert.Same(prop, props.First());
+            [Fact]
+            public void NullProperty_ShouldNotEditFilledCollection()
+            {
+                ICommand cmd = new AddPropertyCommand(_properties, null);
+
+                cmd.Execute();
+
+                Assert.Equal(2, _properties.Count);
+            }
+
+            [Fact]
+            public void ShouldBeAddedAtTheEndOfCollection()
+            {
+                var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
+                ICommand cmd = new AddPropertyCommand(_properties, prop);
+
+                cmd.Execute();
+
+                Assert.Equal(3, _properties.Count);
+                Assert.Same(prop, _properties.Last());
+            }
         }
     }
 }
