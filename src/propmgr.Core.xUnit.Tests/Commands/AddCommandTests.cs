@@ -82,6 +82,15 @@ namespace propmgr.Core.xUnit.Tests.Commands
                 Assert.Equal(3, _properties.Count);
                 Assert.Same(prop, _properties.Last());
             }
+
+            [Fact]
+            public void ShouldThrowIfDuplicateKey()
+            {
+                var prop = new PropertyPair { Key = "B", Value = "Hello, World!" };
+                ICommand cmd = new AddPropertyCommand(_properties, prop);
+
+                Assert.Throws<ArgumentException>(() => cmd.Execute());
+            }
         }
     }
 }
