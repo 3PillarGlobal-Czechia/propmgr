@@ -1,0 +1,63 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+  projectName: 'propmgr'
+  coverletOptions: '--exclude "[xunit.*]*" --exclude "[*]*.Program"'
+
+steps:
+# Install the latest version of the dotnet sdk
+- task: DotNetCoreInstaller@0
+  displayName: 'Use .NET Core sdk 2.2.300'
+  inputs:
+    version: 2.2.300
+
+# build all projects
+- task: DotNetCoreCLI@2
+  displayName: dotnet build
+  inputs:
+    projects: '**/*.csproj'
+    arguments: '--configuration $(BuildConfiguration)'
+
+- task: DotNetCoreCLI@2
+  displayName: dotnet test
+  inputs:
+    command: test
+    arguments: '--configuration $(BuildConfiguration)'
+    projects: 'src/*.xUnit.Tests/*.csproj'
+    nobuild: true
+
+# Install coverlet as a global tool & generate coverage
+- script: |
+    dotnet tool install --global coverlet.console
+    coverlet $(Build.SourcesDirectory)/src/$(projectName).Core.xUnit.Tests/bin/$(BuildConfiguration)/netcoreapp2.2/$(projectName).Core.xUnit.Tests.dll --target "dotnet" --targetargs "test --configuration $(BuildConfiguration) src/$(projectName).Core.xUnit.Tests/ --no-build" --format cobertura -o src/$(projectName).Core.xUnit.Tests\ $(coverletOptions)
+  displayName: Create Code coverage report
+
+# Generate the report using ReportGenerator (https://github.com/danielpalme/ReportGenerator)
+# First install the tool on the machine, then run it
+- script: |
+    dotnet tool install -g dotnet-reportgenerator-globaltool
+    reportgenerator -reports:$(Build.SourcesDirectory)/src/*.xUnit.Tests/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:Cobertura 
+  displayName: Report Code coverage report
+
+# Publish the code coverage result (summary and web site)
+# The summary allows to view the coverage percentage in the summary tab
+# The web site allows to view which lines are covered directly in Azure Pipeline
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish code coverage'
+  inputs:
+    codeCoverageTool: Cobertura
+    summaryFileLocation: '$(Build.SourcesDirectory)/CodeCoverage/Cobertura.xml'
+    reportDirectory: '$(Build.SourcesDirectory)/CodeCoverage'
