@@ -1,36 +1,74 @@
 ﻿using propmgr.Core.Entities;
-using System;
-using System.Collections.Generic;
+using propmgr.Core.UserInteraction;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace propmgr.Core.Commands
 {
     public class AddPropertyCommand : ICommand
     {
-        private readonly List<PropertyPair> _properties;
+        private readonly IPropertiesFile _file;
         private readonly PropertyPair _propertyToAdd;
+        private readonly IUserConfirmation _userConfirmation;
 
-        public AddPropertyCommand(List<PropertyPair> properties, PropertyPair newProperty)
+        public AddPropertyCommand(IPropertiesFile file, PropertyPair newProperty, IUserConfirmation userConfirmation)
         {
-            if (properties is null)
-                throw new ArgumentNullException("The properties collection cannot be null.");
-
-            _properties = properties;
+            _file = file;
             _propertyToAdd = newProperty;
+            _userConfirmation = userConfirmation;
         }
 
-        public void Execute()
+        public async void Execute()
         {
-            if (_propertyToAdd is null)
+            if (await GetShouldAbortAsync())
                 return;
 
-            if (KeyAlreadyExists())
-                throw new ArgumentException("A property with this key already exists.");
-
-            _properties.Add(_propertyToAdd);
+            AddOrUpdateProperty();
         }
 
-        private bool KeyAlreadyExists()
-            => _properties.Any(p => p.Key == _propertyToAdd.Key);
+        private async Task<bool> GetShouldAbortAsync()
+            => FileOrPropertyIsNull() || await GetUserWantsToAvoidDuplicateValuesAsync();
+
+        private bool FileOrPropertyIsNull()
+            => _file is null || _propertyToAdd is null;
+
+        private async Task<bool> GetUserWantsToAvoidDuplicateValuesAsync()
+            => GetValueAlreadyExists() && !await UserConfirmsAddition();
+
+        private async Task<bool> UserConfirmsAddition()
+            => await _userConfirmation.Confirm($"Another property with the value: ˙{_propertyToAdd.Value}˙ already exists. Do you want to add it anyways?");
+
+        private bool GetValueAlreadyExists()
+            => _file.GetProperties().Any(p => p.Value == _propertyToAdd.Value);
+
+        private void AddOrUpdateProperty()
+        {
+            if (KeyExists())
+            {
+                UpdateExistingProperty();
+            }
+            else
+            {
+                AddPropertyToCollection();
+            }
+        }
+
+        private bool KeyExists()
+            => _file.GetProperties().Any(p => p.Key == _propertyToAdd.Key);
+
+        private void UpdateExistingProperty()
+        {
+            var key = _file.GetProperties().FirstOrDefault(p => p.Key == _propertyToAdd.Key);
+            if (key is null)
+                return;
+            key.Value = _propertyToAdd.Value;
+        }
+
+        private void AddPropertyToCollection()
+        {
+            var p = _file.GetProperties().ToList();
+            p.Add(_propertyToAdd);
+            _file.SetCollection(p);
+        }
     }
 }
