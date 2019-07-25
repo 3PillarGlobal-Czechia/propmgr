@@ -1,6 +1,8 @@
 ﻿using propmgr.Core.Commands;
 using propmgr.Core.Entities;
-using System;
+using propmgr.Core.UserInteraction;
+using propmgr.Core.xUnit.Tests.Mocks;
+using propmgr.Core.xUnit.Tests.Mocks.UserConfirmation;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -10,87 +12,110 @@ namespace propmgr.Core.xUnit.Tests.Commands
     public class AddCommandTests
     {
         [Fact]
-        public void NullCollection_ShouldThrowOnConstruction()
+        public void NullProperty_ShouldNotEditEmptyCollection()
         {
+            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>());
+            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            ICommand cmd = new AddPropertyCommand(file, null, uc);
+
+            cmd.Execute();
+
+            Assert.Empty(file.GetProperties());
+        }
+
+        [Fact]
+        public void ShouldAddIntoEmptyCollection()
+        {
+            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>());
+            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
+            ICommand cmd = new AddPropertyCommand(file, prop, uc);
+
+            cmd.Execute();
+
+            var collection = file.GetProperties();
+            Assert.Single(collection);
+            Assert.Same(prop, collection.First());
+        }
+
+        [Fact]
+        public void NullCollection_ShouldNotThrow()
+        {
+            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
             var prop = new PropertyPair { Key = "A", Value = "a" };
-            Assert.Throws<ArgumentNullException>(() => { ICommand cmd = new AddPropertyCommand(null, prop); });
+            ICommand cmd = new AddPropertyCommand(null, prop, uc);
+
+            cmd.Execute();
         }
 
-        public class EmptyPropertyList
+        [Fact]
+        public void NullProperty_ShouldNotEditFilledCollection()
         {
-            private readonly List<PropertyPair> _properties;
-
-            public EmptyPropertyList()
-            {
-                _properties = new List<PropertyPair>();
-            }
-
-            [Fact]
-            public void NullProperty_ShouldNotEditEmptyCollection()
-            {
-                ICommand cmd = new AddPropertyCommand(_properties, null);
-
-                cmd.Execute();
-
-                Assert.Empty(_properties);
-            }
-
-            [Fact]
-            public void ShouldAddIntoEmptyCollection()
-            {
-                var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
-                ICommand cmd = new AddPropertyCommand(_properties, prop);
-
-                cmd.Execute();
-
-                Assert.Single(_properties);
-                Assert.Same(prop, _properties.First());
-            }
-        }
-
-        public class PropertyListWithTwoElements
-        {
-            private readonly List<PropertyPair> _properties;
-
-            public PropertyListWithTwoElements()
-            {
-                _properties = new List<PropertyPair>
+            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
                 {
                     new PropertyPair { Key = "A", Value = "a" },
                     new PropertyPair { Key = "B", Value = "b" }
-                };
-            }
+                });
+            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            ICommand cmd = new AddPropertyCommand(file, null, uc);
 
-            [Fact]
-            public void NullProperty_ShouldNotEditFilledCollection()
-            {
-                ICommand cmd = new AddPropertyCommand(_properties, null);
+            cmd.Execute();
 
-                cmd.Execute();
+            Assert.Equal(2, file.GetProperties().Count());
+        }
 
-                Assert.Equal(2, _properties.Count);
-            }
+        [Fact]
+        public void ShouldBeAddedAtTheEndOfCollection()
+        {
+            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
+                {
+                    new PropertyPair { Key = "A", Value = "a" },
+                    new PropertyPair { Key = "B", Value = "b" }
+                });
+            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
+            ICommand cmd = new AddPropertyCommand(file, prop, uc);
 
-            [Fact]
-            public void ShouldBeAddedAtTheEndOfCollection()
-            {
-                var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
-                ICommand cmd = new AddPropertyCommand(_properties, prop);
+            cmd.Execute();
 
-                cmd.Execute();
+            var collection = file.GetProperties();
+            Assert.Equal(3, collection.Count());
+            Assert.Same(prop, collection.Last());
+        }
 
-                Assert.Equal(3, _properties.Count);
-                Assert.Same(prop, _properties.Last());
-            }
+        [Fact]
+        public void ShouldUpdateExistingIfKeyAlreadyExists()
+        {
+            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
+                {
+                    new PropertyPair { Key = "A", Value = "a" },
+                    new PropertyPair { Key = "B", Value = "b" }
+                });
+            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            var prop = new PropertyPair { Key = "B", Value = "Hello, World!" };
+            ICommand cmd = new AddPropertyCommand(file, prop, uc);
 
-            [Fact]
-            public void ShouldThrowIfDuplicateKey()
-            {
-                var prop = new PropertyPair { Key = "B", Value = "Hello, World!" };
-                ICommand cmd = new AddPropertyCommand(_properties, prop);
+            cmd.Execute();
 
-                Assert.Throws<ArgumentException>(() => cmd.Execute());
-            }
+            Assert.Equal(2, file.GetProperties().Count());
+            Assert.Equal("Hello, World!", file.GetProperties().Last().Value);
+        }
+
+        [Fact]
+        public void WhenUserDeniesShouldNotAddDuplicateValue()
+        {
+            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
+                {
+                    new PropertyPair { Key = "A", Value = "a" },
+                    new PropertyPair { Key = "B", Value = "b" }
+                });
+            IUserConfirmation uc = new AlwaysDenyingUserConfirmation();
+            var prop = new PropertyPair { Key = "greeting", Value = "b" };
+            ICommand cmd = new AddPropertyCommand(file, prop, uc);
+
+            cmd.Execute();
+
+            Assert.Equal(2, file.GetProperties().Count());
         }
     }
 }
