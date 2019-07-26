@@ -15,7 +15,7 @@ namespace propmgr.Core.xUnit.Tests.Commands
         public void NullProperty_ShouldNotEditEmptyCollection()
         {
             IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>());
-            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
             ICommand cmd = new AddPropertyCommand(file, null, uc);
 
             cmd.Execute();
@@ -27,7 +27,7 @@ namespace propmgr.Core.xUnit.Tests.Commands
         public void ShouldAddIntoEmptyCollection()
         {
             IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>());
-            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
             var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
             ICommand cmd = new AddPropertyCommand(file, prop, uc);
 
@@ -41,7 +41,7 @@ namespace propmgr.Core.xUnit.Tests.Commands
         [Fact]
         public void NullCollection_ShouldNotThrow()
         {
-            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
             var prop = new PropertyPair { Key = "A", Value = "a" };
             ICommand cmd = new AddPropertyCommand(null, prop, uc);
 
@@ -56,7 +56,7 @@ namespace propmgr.Core.xUnit.Tests.Commands
                     new PropertyPair { Key = "A", Value = "a" },
                     new PropertyPair { Key = "B", Value = "b" }
                 });
-            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
             ICommand cmd = new AddPropertyCommand(file, null, uc);
 
             cmd.Execute();
@@ -72,7 +72,7 @@ namespace propmgr.Core.xUnit.Tests.Commands
                     new PropertyPair { Key = "A", Value = "a" },
                     new PropertyPair { Key = "B", Value = "b" }
                 });
-            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
             var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
             ICommand cmd = new AddPropertyCommand(file, prop, uc);
 
@@ -91,7 +91,7 @@ namespace propmgr.Core.xUnit.Tests.Commands
                     new PropertyPair { Key = "A", Value = "a" },
                     new PropertyPair { Key = "B", Value = "b" }
                 });
-            IUserConfirmation uc = new AlwaysAcceptingUserConfirmation();
+            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
             var prop = new PropertyPair { Key = "B", Value = "Hello, World!" };
             ICommand cmd = new AddPropertyCommand(file, prop, uc);
 
