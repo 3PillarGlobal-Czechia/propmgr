@@ -7,8 +7,8 @@ namespace propmgr.Core.Entities
         public string Key { get; set; }
         public string Value { get; set; }
 
-        public bool IsComment() => throw new NotImplementedException();
+        public bool IsComment() => Key == "#" || Key == "!";
 
-        public bool IsEmptyLine() => throw new NotImplementedException();
+        public bool IsEmptyLine() => Key == "" && Value == "";
     }
 }
