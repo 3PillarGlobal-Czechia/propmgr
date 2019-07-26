@@ -10,6 +10,9 @@ namespace propmgr.Core.xUnit.Tests.Mocks
         public InMemoryPropertiesFile(IEnumerable<PropertyPair> properties)
             => _properties = properties;
 
+        public InMemoryPropertiesFile()
+            => _properties = new List<PropertyPair>();
+
         public IEnumerable<PropertyPair> GetProperties()
             => _properties;
 
