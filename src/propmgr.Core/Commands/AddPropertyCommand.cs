@@ -58,9 +58,7 @@ namespace propmgr.Core.Commands
 
         private void UpdateExistingProperty()
         {
-            var key = _file.GetProperties().FirstOrDefault(p => p.Key == _propertyToAdd.Key);
-            if (key is null)
-                return;
+            var key = _file.GetProperties().First(p => p.Key == _propertyToAdd.Key);
             key.Value = _propertyToAdd.Value;
         }
 
