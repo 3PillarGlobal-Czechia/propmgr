@@ -6,6 +6,6 @@ namespace propmgr.Core
     public interface IPropertiesFile
     {
         IEnumerable<PropertyPair> GetProperties();
-        void SetCollection(IEnumerable<PropertyPair> properties);
+        void SetProperties(IEnumerable<PropertyPair> properties);
     }
 }

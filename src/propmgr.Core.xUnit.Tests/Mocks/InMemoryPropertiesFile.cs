@@ -16,7 +16,7 @@ namespace propmgr.Core.xUnit.Tests.Mocks
         public IEnumerable<PropertyPair> GetProperties()
             => _properties;
 
-        public void SetCollection(IEnumerable<PropertyPair> properties)
+        public void SetProperties(IEnumerable<PropertyPair> properties)
             => _properties = properties;
     }
 }

@@ -33,7 +33,7 @@ namespace propmgr.Core.Commands
         private void RemoveAllPropertiesByKey()
         {
             var props = _file.GetProperties().Where(p => p.Key != _targetKey);
-            _file.SetCollection(props);
+            _file.SetProperties(props);
         }
     }
 }
