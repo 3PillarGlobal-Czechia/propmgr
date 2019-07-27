@@ -66,7 +66,7 @@ namespace propmgr.Core.Commands
         {
             var p = _file.GetProperties().ToList();
             p.Add(_propertyToAdd);
-            _file.SetCollection(p);
+            _file.SetProperties(p);
         }
     }
 }
