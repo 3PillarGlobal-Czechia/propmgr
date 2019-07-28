@@ -63,5 +63,28 @@ namespace propmgr.Core.xUnit.Tests.Commands
 
             Assert.Empty(file.GetProperties());
         }
+
+
+        [Fact]
+        public void FileWithEmptyLines_ShouldBeStrippedOfThem()
+        {
+            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
+            {
+                new PropertyPair { Key = "", Value = "" },
+                new PropertyPair { Key = "", Value = "" },
+                new PropertyPair { Key = "Key1", Value = "Value1" },
+                new PropertyPair { Key = "", Value = "" },
+                new PropertyPair { Key = "#", Value = "Comment 1" },
+                new PropertyPair { Key = "!", Value = "Comment 2" },
+                new PropertyPair { Key = "", Value = "" }
+            });
+            ICommand cmd = new StripEmptyLinesCommand(file);
+
+            cmd.Execute();
+
+            Assert.Equal(3, file.GetProperties().Count());
+            Assert.Equal("Comment 2", file.GetProperties().Last().Value);
+            Assert.Equal("Value1", file.GetProperties().First().Value);
+        }
     }
 }
