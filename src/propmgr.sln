@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26124.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.89
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "propmgr.Core", "propmgr.Core\propmgr.Core.csproj", "{1658BFCE-9242-4D46-BF84-B67362CA4A22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "propmgr.Core", "propmgr.Core\propmgr.Core.csproj", "{1658BFCE-9242-4D46-BF84-B67362CA4A22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "propmgr.Core.xUnit.Tests", "propmgr.Core.xUnit.Tests\propmgr.Core.xUnit.Tests.csproj", "{491E83A0-773F-480E-A850-ED22783CC57F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "propmgr.Core.xUnit.Tests", "propmgr.Core.xUnit.Tests\propmgr.Core.xUnit.Tests.csproj", "{491E83A0-773F-480E-A850-ED22783CC57F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +15,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{1658BFCE-9242-4D46-BF84-B67362CA4A22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -44,5 +41,11 @@ Global
 		{491E83A0-773F-480E-A850-ED22783CC57F}.Release|x64.Build.0 = Release|Any CPU
 		{491E83A0-773F-480E-A850-ED22783CC57F}.Release|x86.ActiveCfg = Release|Any CPU
 		{491E83A0-773F-480E-A850-ED22783CC57F}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7520DBB4-F724-4F3A-8647-DFA3724073AD}
 	EndGlobalSection
 EndGlobal
