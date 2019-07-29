@@ -14,9 +14,8 @@ namespace propmgr.Core.xUnit.Tests.Commands
         [Fact]
         public void NullProperty_ShouldNotEditEmptyCollection()
         {
-            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>());
-            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
-            ICommand cmd = new AddPropertyCommand(file, null, uc);
+            IPropertiesFile file = CreateEmptyPropertiesFile();
+            ICommand cmd = CreateCommandWithoutUserConfirmation(file, null);
 
             cmd.Execute();
 
@@ -24,12 +23,31 @@ namespace propmgr.Core.xUnit.Tests.Commands
         }
 
         [Fact]
+        public void NullProperty_ShouldNotEditFilledCollection()
+        {
+            IPropertiesFile file = CreateFileWithTwoProperties();
+            ICommand cmd = CreateCommandWithoutUserConfirmation(file, null);
+
+            cmd.Execute();
+
+            Assert.Equal(2, file.GetProperties().Count());
+        }
+
+        [Fact]
+        public void NullCollection_ShouldNotThrow()
+        {
+            var prop = CreateProperty("Key", "Value");
+            ICommand cmd = CreateCommandWithoutUserConfirmation(null, prop);
+
+            cmd.Execute();
+        }
+
+        [Fact]
         public void ShouldAddIntoEmptyCollection()
         {
-            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>());
-            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
-            var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
-            ICommand cmd = new AddPropertyCommand(file, prop, uc);
+            IPropertiesFile file = CreateEmptyPropertiesFile();
+            var prop = CreateProperty("Key", "Value");
+            ICommand cmd = CreateCommandWithoutUserConfirmation(file, prop);
 
             cmd.Execute();
 
@@ -39,42 +57,11 @@ namespace propmgr.Core.xUnit.Tests.Commands
         }
 
         [Fact]
-        public void NullCollection_ShouldNotThrow()
-        {
-            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
-            var prop = new PropertyPair { Key = "A", Value = "a" };
-            ICommand cmd = new AddPropertyCommand(null, prop, uc);
-
-            cmd.Execute();
-        }
-
-        [Fact]
-        public void NullProperty_ShouldNotEditFilledCollection()
-        {
-            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
-                {
-                    new PropertyPair { Key = "A", Value = "a" },
-                    new PropertyPair { Key = "B", Value = "b" }
-                });
-            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
-            ICommand cmd = new AddPropertyCommand(file, null, uc);
-
-            cmd.Execute();
-
-            Assert.Equal(2, file.GetProperties().Count());
-        }
-
-        [Fact]
         public void ShouldBeAddedAtTheEndOfCollection()
         {
-            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
-                {
-                    new PropertyPair { Key = "A", Value = "a" },
-                    new PropertyPair { Key = "B", Value = "b" }
-                });
-            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
-            var prop = new PropertyPair { Key = "greeting", Value = "Hello, World!" };
-            ICommand cmd = new AddPropertyCommand(file, prop, uc);
+            IPropertiesFile file = CreateFileWithTwoProperties();
+            var prop = CreateProperty("Key", "Value");
+            ICommand cmd = CreateCommandWithoutUserConfirmation(file, prop);
 
             cmd.Execute();
 
@@ -86,36 +73,47 @@ namespace propmgr.Core.xUnit.Tests.Commands
         [Fact]
         public void ShouldUpdateExistingIfKeyAlreadyExists()
         {
-            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
-                {
-                    new PropertyPair { Key = "A", Value = "a" },
-                    new PropertyPair { Key = "B", Value = "b" }
-                });
-            IUserConfirmation uc = new ThrowOnTriggerUserConfirmation();
-            var prop = new PropertyPair { Key = "B", Value = "Hello, World!" };
-            ICommand cmd = new AddPropertyCommand(file, prop, uc);
+            const string newValue = "NewValue";
+            IPropertiesFile file = CreateFileWithTwoProperties();
+            var duplicateKey = file.GetProperties().Last().Key;
+            var prop = CreateProperty(duplicateKey, newValue);
+            prop.Value = newValue;
+            ICommand cmd = CreateCommandWithoutUserConfirmation(file, prop);
 
             cmd.Execute();
 
             Assert.Equal(2, file.GetProperties().Count());
-            Assert.Equal("Hello, World!", file.GetProperties().Last().Value);
+            Assert.Equal(newValue, file.GetProperties().Last().Value);
         }
 
         [Fact]
-        public void WhenUserDeniesShouldNotAddDuplicateValue()
+        public void ShouldNotAddDuplicateValueWhenUserDenies()
         {
-            IPropertiesFile file = new InMemoryPropertiesFile(new List<PropertyPair>
-                {
-                    new PropertyPair { Key = "A", Value = "a" },
-                    new PropertyPair { Key = "B", Value = "b" }
-                });
+            IPropertiesFile file = CreateFileWithTwoProperties();
             IUserConfirmation uc = new AlwaysDenyingUserConfirmation();
-            var prop = new PropertyPair { Key = "greeting", Value = "b" };
+            var duplicateValue = file.GetProperties().Last().Value;
+            var prop = CreateProperty("Key1", duplicateValue);
             ICommand cmd = new AddPropertyCommand(file, prop, uc);
 
             cmd.Execute();
 
             Assert.Equal(2, file.GetProperties().Count());
         }
+
+        private static IPropertiesFile CreateFileWithTwoProperties()
+            => new InMemoryPropertiesFile(new List<PropertyPair>
+            {
+                new PropertyPair { Key = "ExistingKey1", Value = "ExistingValue1" },
+                new PropertyPair { Key = "ExistingKey2", Value = "ExistingValue2" }
+            });
+
+        private static IPropertiesFile CreateEmptyPropertiesFile()
+            => new InMemoryPropertiesFile();
+
+        private static ICommand CreateCommandWithoutUserConfirmation(IPropertiesFile file, PropertyPair property)
+            => new AddPropertyCommand(file, property, new ThrowOnTriggerUserConfirmation());
+
+        private static PropertyPair CreateProperty(string key, string value)
+            => new PropertyPair { Key = key, Value = value };
     }
 }
